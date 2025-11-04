@@ -3,13 +3,7 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Chat from "@/components/chat";
 import { Button } from "@/components/ui/button";
-import {
-  CheckCircle,
-  Zap,
-  Database,
-  Shield,
-  ExternalLink,
-} from "lucide-react";
+import { Zap, Database, Shield, ExternalLink } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 
@@ -117,36 +111,30 @@ export default function Home() {
             <div className="flex justify-center mb-3">
               <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
             </div>
-            <div className="font-semibold mb-2 text-sm sm:text-base">
-              AI SDK
-            </div>
+            <div className="font-semibold mb-2 text-sm sm:text-base">Gemini</div>
             <div className="text-xs text-muted-foreground mb-2">
-              <div className="font-mono bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded mb-1">OPENAI_API_KEY</div>
-              <div className="font-mono bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded">ANTHROPIC_API_KEY</div>
+              <div className="font-mono bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded">GOOGLE_GENERATIVE_AI_API_KEY</div>
             </div>
-            <div className="grid grid-cols-2 gap-1 sm:gap-2">
+            <div className="grid grid-cols-1">
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() =>
-                  window.open("https://platform.openai.com", "_blank")
-                }
+                onClick={() => window.open("https://aistudio.google.com", "_blank")}
                 className="text-xs px-1 sm:px-2"
               >
-                OpenAI
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  window.open("https://console.anthropic.com", "_blank")
-                }
-                className="text-xs px-1 sm:px-2"
-              >
-                Anthropic
+                Google AI Studio
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Quick Navigation */}
+        <div className="flex items-center justify-center mb-6">
+          <SignedIn>
+            <Button asChild>
+              <a href="/dashboard">Go to Dashboard</a>
+            </Button>
+          </SignedIn>
         </div>
 
         {/* Chat Section */}
