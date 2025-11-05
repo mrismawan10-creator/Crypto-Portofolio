@@ -90,7 +90,11 @@ export default async function DashboardPage() {
                 return { label: `${r.code}`, value, color: r.color_hex ?? undefined };
               })
               .filter((d) => Number.isFinite(d.value) && d.value > 0);
-            return <PieChart data={chartData} />;
+            return (
+              <div className="w-full flex justify-center">
+                <PieChart data={chartData} />
+              </div>
+            );
           })()}
         </Card>
         <Card className="p-3 sm:p-4 shadow-lg/50 bg-white/60 dark:bg-gray-900/50 backdrop-blur-xl border-white/50 dark:border-gray-800/50">
