@@ -16,14 +16,6 @@ export async function createSupabaseServerClient() {
     // When the template is not configured, Clerk can throw (e.g. Not Found)
     token = null;
   }
-  // Fallback: try default session token if template not configured or not found
-  if (!token) {
-    try {
-      token = await getToken();
-    } catch {
-      token = null;
-    }
-  }
 
   if (token) {
     // Use third-party auth token from Clerk (preferred)
@@ -68,3 +60,5 @@ export async function createSupabaseServerClient() {
     },
   });
 }
+
+

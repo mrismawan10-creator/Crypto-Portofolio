@@ -66,7 +66,7 @@ E --> G[Add/Edit Asset → Update ke Supabase]
 Table: crypto_portfolio
 Kolom	Tipe	Keterangan
 id	uuid (PK)	Auto generated
-user_id	uuid	Relasi ke Clerk
+user_id	text	Clerk user ID (Clerk)
 code	text	Kode aset (mis. BTC, HYPE)
 name	text	Nama aset
 amount	numeric	Jumlah kepemilikan

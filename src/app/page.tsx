@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Hero Section */}
-      <div className="text-center py-12 sm:py-16 relative px-4">
+      <div className="text-center py-12 sm:py-16 relative px-2 sm:px-4 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
@@ -46,7 +46,7 @@ export default function Home() {
         </p>
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 pb-12 sm:pb-8 max-w-5xl">
+      <main className="container mx-auto px-2 sm:px-6 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-12 sm:pb-8 max-w-5xl">
         <div className="text-center mb-8">
           <div className="text-4xl sm:text-5xl mb-2">⚠️</div>
           <div className="font-bold text-lg sm:text-xl mb-1">Setup Required</div>
@@ -147,3 +147,4 @@ export default function Home() {
     </div>
   );
 }
+

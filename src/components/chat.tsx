@@ -15,6 +15,20 @@ export default function Chat() {
     error,
     isLoading: chatLoading,
   } = useChat({
+    api: "/api/chat",
+    onResponse: async (res) => {
+      if (!res.ok) {
+        try {
+          const data = await res.json();
+          throw new Error(
+            (data as any)?.error || (data as any)?.message || `Chat API error (${res.status})`,
+          );
+        } catch {
+          const txt = await res.text();
+          throw new Error(txt || `Chat API error (${res.status})`);
+        }
+      }
+    },
     onError: (error) => {
       console.error("Chat error:", error);
     },
@@ -23,9 +37,9 @@ export default function Chat() {
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto">
       <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">🤖 AI Chat</h2>
+        <h2 className="text-2xl font-bold mb-2">AI Chat</h2>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Powered by OpenAI GPT-4o • Protected by Clerk Authentication
+          Powered by Gemini via Vercel AI SDK
         </p>
       </div>
 
@@ -34,8 +48,7 @@ export default function Chat() {
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <span className="text-red-700 dark:text-red-300 text-sm">
-              {error.message ||
-                "An error occurred while processing your request."}
+              {error.message || "An error occurred while processing your request."}
             </span>
           </div>
         </Card>
@@ -49,8 +62,7 @@ export default function Chat() {
               Start a conversation
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ask me anything! I&apos;m here to help with coding, questions, or
-              just chat.
+              Ask me anything! I&apos;m here to help with coding, questions, or just chat.
             </p>
           </Card>
         ) : (
@@ -111,3 +123,4 @@ export default function Chat() {
     </div>
   );
 }
+

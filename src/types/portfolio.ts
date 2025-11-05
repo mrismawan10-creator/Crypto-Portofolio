@@ -5,6 +5,7 @@ export type PortfolioRow = {
   name: string;
   amount: number;
   avg_price_usd: number;
+  color_hex?: string;
   updated_at: string;
 };
 
@@ -14,4 +15,5 @@ export type PortfolioWithComputed = PortfolioRow & {
   pl_usd?: number;
   pl_percent?: number;
 };
+
 

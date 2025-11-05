@@ -1,3 +1,4 @@
+import Chat from "@/components/chat";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,9 @@ import { fetchUsdPricesForSymbols, symbolToCoinId } from "@/lib/coins";
 import { PortfolioWithComputed } from "@/types/portfolio";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, TrendingDown, TrendingUp } from "lucide-react";
+import RefreshButton from "@/components/refresh-button";
+import RealtimeRefresher from "@/components/realtime-refresher";
+import PieChart from "@/components/pie-chart";
 
 async function getData() {
   const { userId } = await auth();
@@ -15,26 +19,37 @@ async function getData() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("crypto_portfolio")
-    .select("id,user_id,code,name,amount,avg_price_usd,updated_at")
+    .select("*")
+    .eq("user_id", userId)
     .order("updated_at", { ascending: false });
 
   const rows = (data || []) as PortfolioWithComputed[];
   const symbols = Array.from(new Set(rows.map((r) => r.code)));
-  const priceData = await fetchUsdPricesForSymbols(symbols);
+  let priceData: Record<string, { usd: number }> = {};
+  try {
+    priceData = await fetchUsdPricesForSymbols(symbols);
+  } catch {
+    priceData = {};
+  }
 
   for (const r of rows) {
-    const coinId = symbolToCoinId(r.code);
-    const price = coinId ? priceData[coinId]?.usd : undefined;
-    if (typeof price === "number") {
-      r.current_price_usd = price;
-      r.current_value_usd = price * Number(r.amount);
-      const cost = Number(r.amount) * Number(r.avg_price_usd);
-      const pl = (r.current_value_usd ?? 0) - cost;
-      r.pl_usd = pl;
-      const denom = cost === 0 ? 0 : pl / cost;
-      r.pl_percent = Number.isFinite(denom) ? denom * 100 : undefined;
-    }
+  const coinId = symbolToCoinId(r.code);
+  const fetchedPrice = coinId ? priceData[coinId]?.usd : undefined;
+
+  const price = typeof r.current_price_usd === "number" ? r.current_price_usd : fetchedPrice;
+  if (typeof price === "number") {
+    r.current_price_usd = price;
+    r.current_value_usd = price * Number(r.amount);
   }
+
+  if (typeof r.current_value_usd === "number") {
+    const cost = Number(r.amount) * Number(r.avg_price_usd);
+    const pl = (r.current_value_usd ?? 0) - cost;
+    r.pl_usd = pl;
+    const denom = cost === 0 ? 0 : pl / cost;
+    r.pl_percent = Number.isFinite(denom) ? denom * 100 : undefined;
+  }
+}
 
   return { items: rows };
 }
@@ -43,21 +58,42 @@ export default async function DashboardPage() {
   const { items } = await getData();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] px-4 py-6 bg-gradient-to-br from-white/60 to-white/20 dark:from-gray-900/60 dark:to-gray-800/30 backdrop-blur-xl">
+    <div className="min-h-[calc(100vh-4rem)] px-2 sm:px-4 py-4 sm:py-6 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] bg-gradient-to-br from-white/60 to-white/20 dark:from-gray-900/60 dark:to-gray-800/30 backdrop-blur-xl">
+        <RealtimeRefresher />
       <div className="mx-auto max-w-5xl space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Portfolio</h1>
             <p className="text-muted-foreground text-sm">Track your crypto assets in real-time</p>
           </div>
-          <Button asChild>
-            <Link href="/dashboard/add">
-              <Plus className="w-4 h-4 mr-1" /> Add Asset
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <RefreshButton />
+            <Button asChild>
+              <Link href="/dashboard/add">
+                <Plus className="w-4 h-4 mr-1" /> Add Asset
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        <Card className="p-4 shadow-lg/50 bg-white/60 dark:bg-gray-900/50 backdrop-blur-xl border-white/50 dark:border-gray-800/50">
+        <Card className="p-3 sm:p-4 shadow-lg/50 bg-white/60 dark:bg-gray-900/50 backdrop-blur-xl border-white/50 dark:border-gray-800/50">
+          <div className="mb-3">
+            <div className="font-semibold">Allocation by Asset</div>
+            <div className="text-sm text-muted-foreground">Persentase nilai tiap aset terhadap total portofolio</div>
+          </div>
+          {(() => {
+            const chartData = items
+              .map((r) => {
+                const value = (typeof r.current_value_usd === "number" && r.current_value_usd > 0)
+                  ? r.current_value_usd
+                  : Number(r.amount) * Number(r.avg_price_usd);
+                return { label: `${r.code}`, value, color: (r as any).color_hex ?? undefined };
+              })
+              .filter((d) => Number.isFinite(d.value) && d.value > 0);
+            return <PieChart data={chartData} />;
+          })()}
+        </Card>
+        <Card className="p-3 sm:p-4 shadow-lg/50 bg-white/60 dark:bg-gray-900/50 backdrop-blur-xl border-white/50 dark:border-gray-800/50">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -88,7 +124,7 @@ export default async function DashboardPage() {
                           <div className="font-medium">{r.name}</div>
                           <div className="text-xs text-muted-foreground">{r.code}</div>
                         </TableCell>
-                        <TableCell className="text-right">{Number(r.amount).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{Number(r.amount).toLocaleString(undefined, { maximumFractionDigits: 8 })}</TableCell>
                         <TableCell className="text-right">{Number(r.avg_price_usd).toLocaleString(undefined, { style: "currency", currency: "USD" })}</TableCell>
                         <TableCell className="text-right">{r.current_price_usd ? r.current_price_usd.toLocaleString(undefined, { style: "currency", currency: "USD" }) : "-"}</TableCell>
                         <TableCell className="text-right">{r.current_value_usd ? r.current_value_usd.toLocaleString(undefined, { style: "currency", currency: "USD" }) : "-"}</TableCell>
@@ -124,17 +160,27 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-4 bg-white/60 dark:bg-gray-900/50 backdrop-blur-xl border-white/50 dark:border-gray-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold">AI Portfolio Insight</div>
-              <div className="text-sm text-muted-foreground">Use the chat on the home page to ask questions like “Berapa total keuntungan saya bulan ini?”</div>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/">Open Chat</Link>
-            </Button>
-          </div>
-        </Card>
+  <div className="mb-4">
+    <div className="font-semibold">AI Portfolio Insight</div>
+    <div className="text-sm text-muted-foreground">Tanyakan hal seputar portofolio Anda langsung di sini.</div>
+  </div>
+  <Chat />
+</Card>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
