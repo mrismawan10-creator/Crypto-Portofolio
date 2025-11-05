@@ -18,7 +18,7 @@ export async function createSupabaseServerClient() {
   let token: string | null = null;
   try {
     token = await getToken({ template: "supabase" });
-  } catch (e) {
+  } catch {
     // When the template is not configured, Clerk can throw (e.g. Not Found)
     token = null;
   }

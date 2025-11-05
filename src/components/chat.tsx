@@ -19,10 +19,14 @@ export default function Chat() {
     onResponse: async (res) => {
       if (!res.ok) {
         try {
-          const data = await res.json();
-          throw new Error(
-            (data as any)?.error || (data as any)?.message || `Chat API error (${res.status})`,
-          );
+          const data: unknown = await res.json();
+          let message: string | null = null;
+          if (data && typeof data === "object") {
+            const obj = data as Record<string, unknown>;
+            if (typeof obj.error === "string") message = obj.error;
+            else if (typeof obj.message === "string") message = obj.message;
+          }
+          throw new Error(message || `Chat API error (${res.status})`);
         } catch {
           const txt = await res.text();
           throw new Error(txt || `Chat API error (${res.status})`);
@@ -123,4 +127,3 @@ export default function Chat() {
     </div>
   );
 }
-

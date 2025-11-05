@@ -24,7 +24,7 @@ export async function addAsset(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
   // Attempt insert with color; if the column doesn't exist yet, retry without it
-  let payload: Record<string, unknown> = {
+  const payload: Record<string, unknown> = {
     user_id: userId,
     code,
     name,
@@ -32,7 +32,7 @@ export async function addAsset(formData: FormData) {
     avg_price_usd,
     color_hex,
   };
-  let { error } = await supabase.from("crypto_portfolio").insert(payload);
+  const { error } = await supabase.from("crypto_portfolio").insert(payload);
   if (error && /color_hex/i.test(error.message)) {
     // Fallback when migration 005_add_color_hex.sql hasn't been applied
     delete payload.color_hex;
@@ -56,7 +56,7 @@ export async function updateAsset(id: string, formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
   // Build update object and gracefully handle missing color_hex column
-  let update: Record<string, unknown> = {
+  const update: Record<string, unknown> = {
     code,
     name,
     amount,
@@ -65,7 +65,7 @@ export async function updateAsset(id: string, formData: FormData) {
   const color = String(formData.get("color_hex") ?? "").trim();
   update.color_hex = color || null;
 
-  let { error } = await supabase
+  const { error } = await supabase
     .from("crypto_portfolio")
     .update(update)
     .eq("id", id)

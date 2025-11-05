@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import { updateAsset, deleteAsset } from "../../actions";
+import type { PortfolioRow } from "@/types/portfolio";
 
 export default async function EditAssetPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
@@ -55,7 +56,7 @@ export default async function EditAssetPage(props: { params: Promise<{ id: strin
             </div>
             <div>
               <Label htmlFor="color_hex">Chart Color</Label>
-              <Input id="color_hex" name="color_hex" type="color" defaultValue={(data as any).color_hex ?? "#4f46e5"} />
+              <Input id="color_hex" name="color_hex" type="color" defaultValue={(data as PortfolioRow).color_hex ?? "#4f46e5"} />
             </div>
 
             <div className="flex items-center gap-2">

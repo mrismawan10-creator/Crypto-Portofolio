@@ -87,7 +87,7 @@ export default async function DashboardPage() {
                 const value = (typeof r.current_value_usd === "number" && r.current_value_usd > 0)
                   ? r.current_value_usd
                   : Number(r.amount) * Number(r.avg_price_usd);
-                return { label: `${r.code}`, value, color: (r as any).color_hex ?? undefined };
+                return { label: `${r.code}`, value, color: r.color_hex ?? undefined };
               })
               .filter((d) => Number.isFinite(d.value) && d.value > 0);
             return <PieChart data={chartData} />;

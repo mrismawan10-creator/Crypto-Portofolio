@@ -19,8 +19,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json().catch(() => ({} as any));
-    const messages = Array.isArray((body as any)?.messages) ? (body as any).messages : [];
+    type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
+    type ChatRequestBody = { messages?: ChatMessage[] };
+
+    const body = (await req.json().catch(() => ({}))) as ChatRequestBody;
+    const messages: ChatMessage[] = Array.isArray(body.messages) ? body.messages : [];
 
     const supabase = await createSupabaseServerClient();
 
