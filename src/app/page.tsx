@@ -5,9 +5,8 @@ export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
       <Button asChild>
-        <Link href="/dashboard">Go to Dashboard</Link>
+        <Link href="/portofolio-crypto">Go to Portfolio</Link>
       </Button>
     </div>
   );
 }
-
