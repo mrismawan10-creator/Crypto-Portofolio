@@ -1,127 +1,103 @@
 "use client";
 
-import { useChat } from "ai/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Bot, User } from "lucide-react";
+
+type Message = {
+  id: string;
+  text: string;
+  ts: number;
+};
 
 export default function Chat() {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    error,
-    isLoading: chatLoading,
-  } = useChat({
-    api: "/api/chat",
-    onResponse: async (res) => {
-      if (!res.ok) {
-        try {
-          const data: unknown = await res.json();
-          let message: string | null = null;
-          if (data && typeof data === "object") {
-            const obj = data as Record<string, unknown>;
-            if (typeof obj.error === "string") message = obj.error;
-            else if (typeof obj.message === "string") message = obj.message;
-          }
-          throw new Error(message || `Chat API error (${res.status})`);
-        } catch {
-          const txt = await res.text();
-          throw new Error(txt || `Chat API error (${res.status})`);
-        }
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [text, setText] = useState("");
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const canSend = text.trim().length > 0;
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+  }, [messages.length]);
+
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    []
+  );
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSend) return;
+    const msg: Message = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      text: text.trim(),
+      ts: Date.now(),
+    };
+    setMessages((prev) => [...prev, msg]);
+    setText("");
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      // simulate submit from input
+      if (canSend) {
+        const fakeEvent = { preventDefault: () => {} } as unknown as React.FormEvent;
+        handleSubmit(fakeEvent);
       }
-    },
-    onError: (error) => {
-      console.error("Chat error:", error);
-    },
-  });
+    }
+  }
+
+  function clearChat() {
+    setMessages([]);
+  }
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto">
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">AI Chat</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Powered by Gemini via Vercel AI SDK
-        </p>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Chat</h2>
+        <Button variant="secondary" size="sm" onClick={clearChat} disabled={messages.length === 0}>
+          Clear
+        </Button>
       </div>
 
-      {error && (
-        <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-900/20 mb-4">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
-            <span className="text-red-700 dark:text-red-300 text-sm">
-              {error.message || "An error occurred while processing your request."}
-            </span>
-          </div>
-        </Card>
-      )}
-
-      <div className="space-y-4 mb-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+      <Card ref={listRef} className="p-4 mb-4 min-h-[400px] max-h-[60vh] overflow-y-auto">
         {messages.length === 0 ? (
-          <Card className="p-6 text-center border-dashed">
-            <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start a conversation
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ask me anything! I&apos;m here to help with coding, questions, or just chat.
-            </p>
-          </Card>
+          <div className="text-center text-sm text-muted-foreground select-none">
+            Belum ada pesan. Ketik pesan di bawah lalu tekan Enter.
+          </div>
         ) : (
-          messages.map((m) => (
-            <Card key={m.id} className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                {m.role === "user" ? (
-                  <User className="w-4 h-4 text-blue-600" />
-                ) : (
-                  <Bot className="w-4 h-4 text-green-600" />
-                )}
-                <span className="font-semibold text-sm">
-                  {m.role === "user" ? "You" : "AI Assistant"}
-                </span>
+          <div className="space-y-3">
+            {messages.map((m) => (
+              <div key={m.id} className="flex justify-end">
+                <div className="max-w-[80%] rounded-lg bg-primary text-primary-foreground px-3 py-2 shadow">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{m.text}</div>
+                  <div className="mt-1 text-[10px] opacity-80 text-right">
+                    {timeFormatter.format(m.ts)}
+                  </div>
+                </div>
               </div>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed pl-6">
-                {m.content}
-              </div>
-            </Card>
-          ))
+            ))}
+          </div>
         )}
+      </Card>
 
-        {chatLoading && (
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Bot className="w-4 h-4 text-green-600" />
-              <span className="font-semibold text-sm">AI Assistant</span>
-            </div>
-            <div className="pl-6">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-              </div>
-            </div>
-          </Card>
-        )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex space-x-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
-          value={input}
-          placeholder="Type your message..."
-          onChange={handleInputChange}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Tulis pesan..."
           className="flex-1"
-          disabled={chatLoading}
         />
-        <Button type="submit" disabled={chatLoading || !input.trim()}>
-          {chatLoading ? "Sending..." : "Send"}
+        <Button type="submit" disabled={!canSend}>
+          Kirim
         </Button>
       </form>
     </div>

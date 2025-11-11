@@ -3,6 +3,8 @@ import { Roboto } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { Header } from "@/components/header";
+import { Toaster } from "@/components/ui/sonner";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -35,11 +37,14 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <Header />
+            <main className="min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-3.5rem)]">
+              {children}
+            </main>
+            <Toaster richColors closeButton />
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
   );
 }
-
