@@ -185,3 +185,48 @@ To implement the generated documentation from CodeGuide:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## Update: Chat Module via n8n
+
+This project includes a chat feature that talks to n8n webhooks directly (no client DB writes). It adds navigation links (Home, Chat, Portofolio Crypto) and a responsive header.
+
+Environment variables
+
+```env
+# n8n Webhooks for Chat
+NEXT_PUBLIC_WEBHOOK_URL=https://your-n8n/webhook/AI-Mentor
+NEXT_PUBLIC_SUMMARY_URL=https://your-n8n/webhook/summary
+NEXT_PUBLIC_TTS_URL=https://your-n8n/webhook/text-to-speech-voice-note
+```
+
+Key files
+
+- `src/app/chat/page.tsx` — Chat route
+- `src/components/ChatWindow.tsx` — Chat container (header, messages, input)
+- `src/components/ChatHeader.tsx` — Method select; dropdown actions (Create Summary, Reset Session)
+- `src/components/ChatInput.tsx` — Textarea + Kirim (no Enter-to-send)
+- `src/components/MessageBubble.tsx` — Bubbles with TTS and Copy
+- `src/components/TypingIndicator.tsx` — Typing dots
+- `src/app/api/proxy/chat/route.ts` — Server-side proxy to n8n chat webhook
+- `src/store/useChatStore.ts` — messages/isTyping (Zustand)
+- `src/store/useMethodStore.ts` — method options (Zustand)
+- `src/store/useSessionStore.ts` — session userId (Zustand)
+
+How it works
+
+- Send chat: POST `NEXT_PUBLIC_WEBHOOK_URL` with `{ message, user_id, method }`
+  - Robust response parsing for JSON/object/array/plain text; displays friendly plain text.
+  - Fallback to server proxy `/api/proxy/chat` to avoid client CORS/TLS issues.
+- Create summary: POST `NEXT_PUBLIC_SUMMARY_URL` with `{ message: "oke", user_id, method }`
+  - On success, adds an AI bubble and shows a toast.
+- TTS: POST `NEXT_PUBLIC_TTS_URL` with `{ message, user_id, method }`
+  - Expects an URL (supports array/object); renders an audio player in a new AI bubble.
+
+UX details
+
+- Header is mobile-friendly (wraps items; no horizontal scroll).
+- Chat section scales on mobile and remains full width on desktop.
+- Textarea is resizable; Enter adds newline; use the Kirim button to send.
+- User bubbles use black text for readability; every bubble has TTS and Copy actions.

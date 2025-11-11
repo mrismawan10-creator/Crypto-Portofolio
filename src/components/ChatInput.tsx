@@ -190,23 +190,12 @@ export function ChatInput() {
     void sendMessage(text);
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      const text = value.trim();
-      if (!text) return;
-      setValue("");
-      void sendMessage(text);
-    }
-  }
-
   return (
     <form onSubmit={onSubmit} className="flex gap-2">
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder="Tulis pesan... (Enter untuk kirim)"
+        placeholder="Tulis pesan..."
         className="flex-1 resize-y min-h-[3rem] max-h-[50vh]"
       />
       <Button type="submit" disabled={!value.trim()}>
