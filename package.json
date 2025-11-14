@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --no-lint",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "node --require ./scripts/patch-punycode.js ./node_modules/next/dist/bin/next dev --turbopack",
+    "build": "node --require ./scripts/patch-punycode.js ./node_modules/next/dist/bin/next build --no-lint",
+    "start": "node --require ./scripts/patch-punycode.js ./node_modules/next/dist/bin/next start",
+    "lint": "node --require ./scripts/patch-punycode.js ./node_modules/next/dist/bin/next lint"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

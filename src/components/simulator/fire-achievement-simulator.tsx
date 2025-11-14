@@ -233,7 +233,7 @@ export default function FireAchievementSimulator() {
               { label: "Target Passive Income", field: "targetPassiveIncome" },
             ] satisfies InputFieldConfig[]
           ).map((inputConfig) => {
-            const isDate = inputConfig.type === "date";
+            const isDate = "type" in inputConfig && inputConfig.type === "date";
             const value = inputs[inputConfig.field];
             return (
             <label key={inputConfig.field} className="text-sm font-medium text-slate-700 dark:text-slate-200 space-y-1">
@@ -390,7 +390,7 @@ export default function FireAchievementSimulator() {
           {fireAchievementMonth >= 0 && (
             <div className="mt-4 rounded-xl border-l-4 border-emerald-500 bg-gradient-to-r from-green-50 to-emerald-50 p-4 text-sm text-emerald-800 dark:from-emerald-900/20 dark:to-emerald-800/10 dark:text-emerald-200">
               <p className="font-semibold">
-                🎯 FIRE Achievement: bulan ke-{fireAchievementMonth} (
+                FIRE Achievement tercapai pada bulan ke-{fireAchievementMonth} (
                 {Math.floor(fireAchievementMonth / 12)} tahun {fireAchievementMonth % 12} bulan)
               </p>
               <p className="text-xs mt-1">
@@ -402,30 +402,40 @@ export default function FireAchievementSimulator() {
       </div>
 
       <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-inner dark:border-blue-900/60 dark:from-slate-900 dark:to-indigo-900/40">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-          📊 Key Insights
-        </h3>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">Key Insights</h3>
         <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-          <li className="flex items-start gap-2">
-            <span className="text-blue-600 font-bold">→</span>
-            Net worth tumbuh dari {formatRupiah(inputs.currentNetWorth)} menjadi {formatRupiah(finalData.netWorth)} dalam{" "}
-            {inputs.yearsToSimulate} tahun.
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-emerald-600 font-bold">→</span>
-            Passive income mencapai {formatRupiah(finalData.passiveIncome)} per bulan (
-            {finalData.fireProgress.toFixed(1)}% dari kebutuhan).
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-purple-600 font-bold">→</span>
-            {fireAchievementMonth >= 0
-              ? `FIRE tercapai dalam ${Math.floor(fireAchievementMonth / 12)} tahun ${fireAchievementMonth % 12} bulan.`
-              : `Perlu lebih dari ${inputs.yearsToSimulate} tahun untuk mencapai FIRE dengan parameter saat ini.`}
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-orange-500 font-bold">→</span>
-            Total investasi rutin selama periode simulasi: {formatRupiah(totalInvested)}.
-          </li>
+          {[
+            {
+              color: "text-blue-600",
+              text: `Net worth tumbuh dari ${formatRupiah(inputs.currentNetWorth)} menjadi ${formatRupiah(
+                finalData.netWorth,
+              )} dalam ${inputs.yearsToSimulate} tahun.`,
+            },
+            {
+              color: "text-emerald-600",
+              text: `Passive income mencapai ${formatRupiah(finalData.passiveIncome)} per bulan (${finalData.fireProgress.toFixed(
+                1,
+              )}% dari kebutuhan).`,
+            },
+            {
+              color: "text-purple-600",
+              text:
+                fireAchievementMonth >= 0
+                  ? `FIRE tercapai dalam ${Math.floor(fireAchievementMonth / 12)} tahun ${
+                      fireAchievementMonth % 12
+                    } bulan.`
+                  : `Perlu lebih dari ${inputs.yearsToSimulate} tahun untuk mencapai FIRE dengan parameter saat ini.`,
+            },
+            {
+              color: "text-orange-500",
+              text: `Total investasi rutin selama periode simulasi: ${formatRupiah(totalInvested)}.`,
+            },
+          ].map((insight) => (
+            <li key={insight.text} className="flex items-start gap-2">
+              <span className={`${insight.color} font-bold`}>-</span>
+              <span>{insight.text}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>
