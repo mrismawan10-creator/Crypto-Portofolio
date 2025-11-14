@@ -59,6 +59,15 @@ const rupiahFormatter = new Intl.NumberFormat("id-ID", {
 
 const formatRupiah = (value: number) => rupiahFormatter.format(Math.round(value));
 
+type InputFieldConfig = {
+  label: string;
+  field: keyof SimulationInputs;
+  step?: number;
+  min?: number;
+  max?: number;
+  type?: "number" | "date";
+};
+
 export default function FireAchievementSimulator() {
   const [inputs, setInputs] = useState<SimulationInputs>(initialInputs);
 
@@ -222,7 +231,7 @@ export default function FireAchievementSimulator() {
               { label: "Inflation Rate (% p.a)", field: "inflationRate", step: 0.5 },
               { label: "Years to Simulate", field: "yearsToSimulate", min: 1, max: 35 },
               { label: "Target Passive Income", field: "targetPassiveIncome" },
-            ] as const
+            ] satisfies InputFieldConfig[]
           ).map((inputConfig) => {
             const isDate = inputConfig.type === "date";
             const value = inputs[inputConfig.field];
