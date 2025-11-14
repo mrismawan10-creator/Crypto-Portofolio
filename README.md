@@ -1,6 +1,6 @@
 [![CodeGuide](/codeguide-backdrop.svg)](https://codeguide.dev)
 
-V1.3
+V1.4
 # CodeGuide Starter Kit
 
 A modern web application starter template built with Next.js 15, featuring authentication, database integration, AI capabilities, and dark mode support.
