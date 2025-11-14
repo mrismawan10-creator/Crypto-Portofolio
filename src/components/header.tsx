@@ -7,6 +7,8 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/chat", label: "Chat" },
   { href: "/portofolio-crypto", label: "Portofolio Crypto" },
+  { href: "/simulator", label: "Simulator" },
+  { href: "/analyze", label: "Analyze" },
 ];
 
 export function Header() {
