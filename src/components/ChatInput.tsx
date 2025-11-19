@@ -182,19 +182,44 @@ export function ChatInput() {
     }
   }
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const submitMessage = () => {
     const text = value.trim();
     if (!text) return;
     setValue("");
     void sendMessage(text);
+  };
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitMessage();
   }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter") return;
+    if (event.altKey) {
+      event.preventDefault();
+      const target = event.currentTarget;
+      const start = target.selectionStart ?? value.length;
+      const end = target.selectionEnd ?? value.length;
+      const nextValue = value.slice(0, start) + "\n" + value.slice(end);
+      setValue(nextValue);
+      requestAnimationFrame(() => {
+        const cursor = start + 1;
+        target.selectionStart = cursor;
+        target.selectionEnd = cursor;
+      });
+      return;
+    }
+    event.preventDefault();
+    submitMessage();
+  };
 
   return (
     <form onSubmit={onSubmit} className="flex gap-2">
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="Tulis pesan..."
         className="flex-1 resize-y min-h-[3rem] max-h-[50vh]"
       />

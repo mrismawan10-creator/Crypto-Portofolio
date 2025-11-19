@@ -13,6 +13,7 @@ export const METHOD_OPTIONS = [
   "hegelian style",
   "socratic method",
   "consultant finance",
+  "cost per use assistant",
 ];
 
 export const useMethodStore = create<MethodState>((set) => ({
