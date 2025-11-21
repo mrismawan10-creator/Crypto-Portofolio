@@ -76,7 +76,7 @@ export function MessageBubble({ message }: { message: Message }) {
         className={[
           "max-w-[80%] rounded-2xl px-4 py-2 shadow",
           "backdrop-blur bg-white/70 dark:bg-gray-900/50 border border-white/20",
-          isUser ? "bg-primary text-black dark:text-black border-transparent" : "",
+          isUser ? "bg-primary text-primary-foreground dark:text-foreground border-transparent" : "",
         ].join(" ")}
       >
         <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</div>
