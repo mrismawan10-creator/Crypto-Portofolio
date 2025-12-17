@@ -47,12 +47,18 @@ export function ChatInput() {
   const buildWsUrl = () => {
     const isBrowser = typeof window !== "undefined";
     const securePreferred = isBrowser && window.location.protocol === "https:";
+    const isLocalHost = (host: string) => host === "localhost" || host === "127.0.0.1" || host === "::1";
     const proto = securePreferred ? "wss" : "ws";
 
     // allow user to set NEXT_PUBLIC_STT_WS_URL as host or full ws/wss url; honor explicit scheme
     if (STT_WS_URL) {
       const hasScheme = STT_WS_URL.startsWith("ws://") || STT_WS_URL.startsWith("wss://");
       const url = new URL(hasScheme ? STT_WS_URL : `${proto}://${STT_WS_URL}`);
+      if (securePreferred && isLocalHost(url.hostname)) {
+        throw new Error(
+          "STT belum dikonfigurasi untuk produksi. Set NEXT_PUBLIC_STT_WS_URL ke host wss publik (bukan localhost)."
+        );
+      }
       // if the page is https but user gave a ws:// host, upgrade to wss to avoid mixed-content blocks
       if (securePreferred && url.protocol === "ws:") {
         url.protocol = "wss:";
@@ -66,7 +72,7 @@ export function ChatInput() {
     // - In local dev, fall back to localhost:8080 for the bundled STT server.
     if (isBrowser) {
       const host = window.location.hostname;
-      const isLocal = host === "localhost" || host === "127.0.0.1";
+      const isLocal = isLocalHost(host);
       if (!isLocal) {
         throw new Error(
           "NEXT_PUBLIC_STT_WS_URL belum diisi untuk lingkungan produksi. Set ke wss://your-stt-host/path"
