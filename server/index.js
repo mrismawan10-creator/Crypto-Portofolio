@@ -6,8 +6,11 @@ import { WebSocketServer } from "ws";
 import { SpeechClient } from "@google-cloud/speech";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// load env from server/.env regardless of current working dir
-loadEnv({ path: path.join(__dirname, ".env") });
+// load env, prefer root .env.local (shared) then fallback to server/.env
+const rootEnv = path.resolve(__dirname, "..", ".env.local");
+const serverEnv = path.join(__dirname, ".env");
+const envPath = fs.existsSync(rootEnv) ? rootEnv : serverEnv;
+loadEnv({ path: envPath });
 
 const port = process.env.PORT || 8080;
 let project = process.env.GCP_PROJECT_ID;
