@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# google stt keys (keep service accounts out of git)
+server/keys/*.json
+server/node_modules
+
 # vercel
 .vercel
 

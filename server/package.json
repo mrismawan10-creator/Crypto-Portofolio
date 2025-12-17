@@ -1,0 +1,15 @@
+{
+  "name": "stt-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@google-cloud/speech": "^6.4.1",
+    "dotenv": "^16.4.5",
+    "ws": "^8.17.0"
+  }
+}
