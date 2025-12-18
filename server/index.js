@@ -6,15 +6,16 @@ import { WebSocketServer } from "ws";
 import { SpeechClient } from "@google-cloud/speech";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// load env, prefer root .env.local (shared) then fallback to server/.env
-const rootEnv = path.resolve(__dirname, "..", ".env.local");
-const serverEnv = path.join(__dirname, ".env");
-const envPath = fs.existsSync(rootEnv) ? rootEnv : serverEnv;
-loadEnv({ path: envPath });
+// load env: only .env.local (root preferred, fallback to server/.env.local)
+const envCandidates = [path.resolve(__dirname, "..", ".env.local"), path.join(__dirname, ".env.local")].filter((p) =>
+  fs.existsSync(p)
+);
+if (envCandidates.length) {
+  loadEnv({ path: envCandidates });
+}
 
 const port = process.env.PORT || 8080;
 let project = process.env.GCP_PROJECT_ID;
-const location = process.env.GCP_LOCATION || "global";
 const expectedKey = process.env.STT_API_KEY;
 
 // ensure GOOGLE_APPLICATION_CREDENTIALS is absolute and set
@@ -39,18 +40,8 @@ if (!project) {
   console.warn("GCP_PROJECT_ID tidak terisi. Isi di server/.env agar STT aktif.");
 }
 
-const client = new SpeechClient({ apiEndpoint: `${location}-speech.googleapis.com` });
+const client = new SpeechClient();
 const wss = new WebSocketServer({ port }, () => console.log(`STT WS server listening on ${port}`));
-
-const streamingConfig = {
-  config: {
-    autoDecodingConfig: {},
-    languageCodes: ["id-ID"],
-    model: "latest_long",
-    features: { enableAutomaticPunctuation: true },
-  },
-  interimResults: true,
-};
 
 wss.on("connection", (ws, req) => {
   const url = new URL(req.url || "/", "http://localhost");
@@ -62,38 +53,70 @@ wss.on("connection", (ws, req) => {
 
   console.log("Client connected for STT");
 
-  const stream = client
-    .streamingRecognize()
-    .on("error", (err) => {
-      console.error("STT stream error:", err.message);
-      safeSend(ws, { type: "error", message: err.message });
-      ws.close(1011, "STT error");
-    })
-    .on("data", (resp) => {
-      const res = resp.results?.[0];
-      if (!res) return;
-      const alt = res.alternatives?.[0];
-      if (!alt?.transcript) return;
-      safeSend(ws, { type: res.isFinal ? "final" : "partial", text: alt.transcript });
-    });
+  let recognizeStream = null;
+  const startStream = () => {
+    if (recognizeStream) return recognizeStream;
+    console.log("Starting STT stream...");
+    const request = {
+      config: {
+        encoding: "WEBM_OPUS", // cocok dengan output MediaRecorder (audio/webm;codecs=opus)
+        sampleRateHertz: 48000,
+        languageCode: "id-ID",
+        enableAutomaticPunctuation: true,
+      },
+      interimResults: true,
+    };
 
-  // send initial config
-  stream.write({ streamingConfig, recognizer: `projects/${project}/locations/${location}/recognizers/_` });
+    recognizeStream = client
+      .streamingRecognize(request)
+      .on("error", (err) => {
+        console.error("STT stream error:", err.message);
+        safeSend(ws, { type: "error", message: err.message });
+        ws.close(1011, "STT error");
+      })
+      .on("data", (resp) => {
+        const result = resp.results?.[0];
+        const transcript = result?.alternatives?.[0]?.transcript;
+        if (transcript) {
+          safeSend(ws, { type: result.isFinal ? "final" : "partial", text: transcript });
+        }
+      });
+    return recognizeStream;
+  };
 
   ws.on("message", (data) => {
+    // handle JSON config handshake first
+    if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed?.config) {
+          console.log("Received config, starting STT stream...");
+          startStream();
+          return;
+        }
+      } catch {
+        // not JSON, treat as audio
+      }
+    }
+
+    if (!recognizeStream) {
+      console.warn("Audio received before config, ignoring...");
+      return;
+    }
+
     const buffer = bufferFromData(data);
     if (!buffer) return;
-    stream.write({ audio: { content: buffer } });
+    recognizeStream.write({ audio_content: buffer });
   });
 
   ws.on("close", () => {
     console.log("Client disconnected");
-    stream.end();
+    if (recognizeStream) recognizeStream.end();
   });
 
   ws.on("error", (err) => {
     console.error("WebSocket error:", err.message);
-    stream.end();
+    if (recognizeStream) recognizeStream.end();
   });
 });
 

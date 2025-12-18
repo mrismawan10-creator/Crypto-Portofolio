@@ -11,8 +11,8 @@ import { useSessionStore } from "@/store/useSessionStore";
 import { toast } from "sonner";
 
 const CHAT_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL;
-const STT_WS_URL = process.env.NEXT_PUBLIC_STT_WS_URL;
-const STT_API_KEY = process.env.NEXT_PUBLIC_STT_API_KEY;
+const STT_WS_URL = "ws://localhost:8080";
+const STT_API_KEY = "663dbac2bd74c735febd98f11a529073ed62d221";
 
 export function ChatInput() {
   const [value, setValue] = useState("");
@@ -161,7 +161,16 @@ export function ChatInput() {
             // ignore malformed payloads
           }
         };
-        ws.onopen = () => resolve(ws);
+        ws.onopen = async () => {
+          console.log("Connected to STT server");
+          console.log("sending config...");
+          ws.send(JSON.stringify({ config: true }));
+          console.log("config sent, waiting before recording...");
+          // beri jeda supaya server siap sebelum audio dikirim
+          await new Promise((r) => setTimeout(r, 500));
+          console.log("config acknowledged delay done, ready to start recording");
+          resolve(ws);
+        };
         ws.onerror = (err) => {
           console.error("STT websocket error", err);
           const message =
